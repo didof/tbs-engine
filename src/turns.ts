@@ -1,14 +1,15 @@
-import TBSEngineEventEmitter from "./eventEmitter"
+import Players from "./players"
 
 type TurnsOptions = {
     amount: number
 }
 
-export default class Turns extends TBSEngineEventEmitter {
+// TODO event emit on roundComplete (all have player the same amount of times)
+
+export default class Turns {
     private _amount: number
     private _current: number = 0
     constructor(opts: TurnsOptions) {
-        super()
         this._amount = opts.amount
     }
 
@@ -20,7 +21,7 @@ export default class Turns extends TBSEngineEventEmitter {
         return this._current === this._amount
     }
 
-    public increment(): void {
-        this._current++
+    public increment(): number {
+        return this._current++
     }
 }

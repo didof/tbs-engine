@@ -6,24 +6,24 @@ import { sleep } from "../src/utils/promises"
 
 const engine = createTurnBasedStrategyEngine({
     playersAmount: 2,
-    maxTurns: Infinity
+    maxTurns: 5
 })
 let err: Nullable<ErrorTurnBasedStrategyEngine>
 
 engine
     .onAddPlayer((ctx) => {
-        console.log("new player")
+        console.log(`new player: ${ctx.activePlayer!.name}.`)
     })
-    .onStart(() => {
-        console.log("Starting...")
+    .onStart((ctx) => {
+        console.log(`start: ${ctx.players.map(p => p.name).join(", ")}.`)
     })
     .onTurn(async ctx => {
-        console.log("turn")
+        console.log(`turn [${ctx.turn.current}/${ctx.turn.total}]: ${ctx.activePlayer!.name}`)
         await sleep()
-        return ctx.turn.current < 3
+        return ctx.turn.current === 4
     })
-    .onEnd(() => {
-        console.log("Exiting...")
+    .onEnd((ctx) => {
+        console.log(`end: That was fun! The last one to play was ${ctx.activePlayer!.name}.`)
     })
     .onReady(async () => {
         const err = await engine.start()

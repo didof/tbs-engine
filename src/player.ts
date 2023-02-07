@@ -1,9 +1,10 @@
+import { deepFreeze } from "./utils/immutable"
+
 type PlayerId = number
 
 export interface PlayerSnapshot {
     name: string
     id: PlayerId
-    index: number
 }
 
 export default abstract class Player {
@@ -12,16 +13,19 @@ export default abstract class Player {
         this._id = id || Math.random()
     }
 
+    get id(): PlayerId {
+        return this._id
+    }
+
     get name(): string {
         return this._name
     }
 
-    snapshot(index: number): PlayerSnapshot {
-        return {
+    get snapshot(): PlayerSnapshot {
+        return deepFreeze({
             name: this._name,
-            id: this._id,
-            index
-        }
+            id: this._id
+        })
     }
 }
 

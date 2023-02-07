@@ -34,7 +34,7 @@ export default class Players extends TBSEventEmitter {
     }
 
     get list(): readonly PlayerSnapshot[] {
-        return deepFreeze([...this._list.map((item, index) => item.snapshot(index))])
+        return deepFreeze([...this._list.map((item, index) => item.snapshot)])
     }
 
     get size(): [current: number, total: number] {
@@ -44,5 +44,17 @@ export default class Players extends TBSEventEmitter {
     get ready(): boolean {
         const [current, expected] = this.size
         return current === expected
+    }
+
+    public get(index: number): PlayerSnapshot {
+        return this._list[index]!.snapshot
+    }
+
+    public *rotate(): Generator<Player, Player, never> {
+        let i = 0
+        while (true) {
+            yield this._list[i++]!
+            if (i === this._list.length) i = 0
+        }
     }
 }

@@ -1,17 +1,18 @@
 import { Immutable, Nullable } from "./utils/types"
 import ErrorTBSEngine, * as errors from "./error"
 import { TBSEvent } from "./eventEmitter"
-import { PlayerSnapshot } from "./player"
+import Player, { PlayerSnapshot } from "./player"
 import Players from "./players"
 import { deepFreeze } from "./utils/immutable"
 import Turns from "./turns"
 
 type TBSEContext = Immutable<{
-    players: readonly PlayerSnapshot[]
+    players: PlayerSnapshot[]
     turn: {
         current: number,
         total: number
     }
+    activePlayer?: PlayerSnapshot
 }>
 
 type TBSEEventCallback<T = unknown> = (ctx: TBSEContext) => T | Promise<T>
@@ -24,7 +25,7 @@ class TBSEngine {
     constructor(playersAmount: number, maxTurns: number) {
         this.players = new Players({
             amount: playersAmount,
-            onAdd: async (_) => await this.safeRunCallback(TBSEvent.AddPlayer),
+            onAdd: async (data) => await this.safeRunCallback(TBSEvent.AddPlayer, data.payload.player),
             onReady: async () => await this.safeRunCallback(TBSEvent.Ready)
         })
         this.turns = new Turns({
@@ -37,18 +38,22 @@ class TBSEngine {
             return new errors.ErrorInsufficientPlayers(...this.players.size)
         }
 
-        this.safeRunCallback(TBSEvent.Start)
+        const iter = this.players.rotate()
+        let player = iter.next().value
+
+        this.safeRunCallback(TBSEvent.Start, player)
 
         let cbs = this._ecbMap.get(TBSEvent.Turn)
         if (!cbs) {
             return new errors.ErrorUnregisteredTurnCallback()
         }
         let run = true
+
         while (run) {
+            player = iter.next().value
+            this.turns.increment()
             for (const cb of cbs) {
-                this.turns.increment()
-                const ctx = this.createContext()
-                const res = await cb(ctx)
+                const res = await cb(this.createContext(player))
                 if (res === true || this.turns.done) {
                     run = false
                     break
@@ -56,7 +61,7 @@ class TBSEngine {
             }
         }
 
-        this.safeRunCallback(TBSEvent.End)
+        this.safeRunCallback(TBSEvent.End, player)
 
         return null
     }
@@ -96,10 +101,12 @@ class TBSEngine {
         return this
     }
 
-    private createContext(): TBSEContext {
+    private createContext(activePlayer?: Player): TBSEContext {
         const [current, total] = this.turns.size
+        const players = this.players.list
         return deepFreeze({
-            players: this.players.list,
+            players,
+            activePlayer: activePlayer ? activePlayer.snapshot : undefined,
             turn: {
                 current,
                 total
@@ -107,15 +114,14 @@ class TBSEngine {
         })
     }
 
-    private async safeRunCallback(event: TBSEvent): Promise<boolean> {
+    private async safeRunCallback(event: TBSEvent, player?: Player): Promise<boolean> {
         const cbs = this._ecbMap.get(event)
         if (!cbs) return false
-        const ctx = this.createContext()
+        const ctx = this.createContext(player)
         for (const cb of cbs) {
             await cb(ctx)
         }
         return true
-
     }
 }
 
