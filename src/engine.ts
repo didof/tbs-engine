@@ -1,6 +1,6 @@
 import { Nullable } from "./utils/types"
 import ErrorTBSEngine, * as errors from "./error"
-import { TBSEngineEvent } from "./eventEmitter"
+import { TBSEvent } from "./eventEmitter"
 import { PlayerSnapshot } from "./player"
 import Players from "./players"
 
@@ -9,24 +9,19 @@ type TBSEContext = Readonly<{
     players: readonly PlayerSnapshot[]
 }>
 
+type TBSEEventCallback<T = unknown> = (ctx: TBSEContext) => T | Promise<T>
+
 class TBSEngine {
     public players: Players
 
     // TODO Based on the EventType, expect different return
-    private _ecbMap: Map<TBSEngineEvent, ((ctx: TBSEContext) => Promise<boolean>)[]> = new Map()
+    private _ecbMap: Map<TBSEvent, TBSEEventCallback[]> = new Map()
 
     constructor(playersAmount: number) {
         this.players = new Players({
             amount: playersAmount,
-            onAdd: async (_) => {
-                const cbs = this._ecbMap.get(TBSEngineEvent.AddPlayer)
-                if (!cbs) return
-
-                const ctx = this.createContext()
-                for (const cb of cbs) {
-                    await cb(ctx)
-                }
-            },
+            onAdd: async (_) => await this.safeRunCallback(TBSEvent.AddPlayer),
+            onReady: async () => await this.safeRunCallback(TBSEvent.Ready)
         })
     }
 
@@ -35,9 +30,11 @@ class TBSEngine {
             return new errors.ErrorInsufficientPlayers(...this.players.size)
         }
 
-        const cbs = this._ecbMap.get(TBSEngineEvent.NewTurn)
+        this.safeRunCallback(TBSEvent.Start)
+
+        let cbs = this._ecbMap.get(TBSEvent.Turn)
         if (!cbs) {
-            return new errors.ErrorUnregisteredNewTurnCallback()
+            return new errors.ErrorUnregisteredTurnCallback()
         }
         let run = true
         while (run) {
@@ -51,26 +48,43 @@ class TBSEngine {
             }
         }
 
-        {
-            const cbs = this._ecbMap.get(TBSEngineEvent.End)
-            if (cbs) {
-                const ctx = this.createContext()
-                for (const cb of cbs) {
-                    await cb(ctx)
-                }
-            }
-        }
+        this.safeRunCallback(TBSEvent.End)
 
         return null
     }
 
-    public on(event: TBSEngineEvent, cb: (ctx: TBSEContext) => Promise<boolean>): this {
-        const cbs = this._ecbMap.get(event)
-        if (!cbs) {
-            this._ecbMap.set(event, [cb])
-        } else {
-            this._ecbMap.set(event, [...cbs, cb])
-        }
+    public onAddPlayer(cb: TBSEEventCallback<void>): this {
+        const event = TBSEvent.AddPlayer
+        const cbs = this._ecbMap.get(event) || []
+        this._ecbMap.set(event, [...cbs, cb])
+        return this
+    }
+
+    public onTurn(cb: TBSEEventCallback<boolean>): this {
+        const event = TBSEvent.Turn
+        const cbs = this._ecbMap.get(event) || []
+        this._ecbMap.set(event, [...cbs, cb])
+        return this
+    }
+
+    public onReady(cb: TBSEEventCallback<void>): this {
+        const event = TBSEvent.Ready
+        const cbs = this._ecbMap.get(event) || []
+        this._ecbMap.set(event, [...cbs, cb])
+        return this
+    }
+
+    public onStart(cb: TBSEEventCallback<void>): this {
+        const event = TBSEvent.Start
+        const cbs = this._ecbMap.get(event) || []
+        this._ecbMap.set(event, [...cbs, cb])
+        return this
+    }
+
+    public onEnd(cb: TBSEEventCallback<void>): this {
+        const event = TBSEvent.End
+        const cbs = this._ecbMap.get(event) || []
+        this._ecbMap.set(event, [...cbs, cb])
         return this
     }
 
@@ -78,6 +92,17 @@ class TBSEngine {
         return {
             players: this.players.list
         }
+    }
+
+    private async safeRunCallback(event: TBSEvent): Promise<boolean> {
+        const cbs = this._ecbMap.get(event)
+        if (!cbs) return false
+        const ctx = this.createContext()
+        for (const cb of cbs) {
+            await cb(ctx)
+        }
+        return true
+
     }
 }
 

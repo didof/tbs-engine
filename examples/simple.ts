@@ -1,8 +1,8 @@
 import { Nullable } from "../src/utils/types"
 import { createTurnBasedStrategyEngine } from "../src"
 import ErrorTurnBasedStrategyEngine from "../src/error"
-import { TBSEngineEvent as E } from "../src/eventEmitter"
 import { PlayerHuman } from "../src/player"
+import { sleep } from "../src/utils/promises"
 
 const engine = createTurnBasedStrategyEngine({
     playersAmount: 2
@@ -12,21 +12,28 @@ let err: Nullable<ErrorTurnBasedStrategyEngine>
 let i = 0
 
 engine
-    .on(E.AddPlayer, async ({ players }) => {
-        // Update UI...
-        return true
+    .onAddPlayer((ctx) => {
+        console.log("new player")
     })
-    .on(E.NewTurn, async (ctx) => {
-        // Inject the game logic and wait for user interaction
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        console.log(ctx)
+    .onStart(() => {
+        console.log("Starting...")
+    })
+    .onTurn(async ctx => {
+        await sleep()
+        console.log("turn")
         i++
         if (i === 3) return false
         return true
     })
-    .on(E.End, async () => {
+    .onEnd(() => {
         console.log("Exiting...")
-        return true
+    })
+    .onReady(async () => {
+        const err = await engine.start()
+        if (err) {
+            console.error(err)
+            process.exit(1)
+        }
     })
 
 const foo = new PlayerHuman("foo")
@@ -40,11 +47,3 @@ if (err = engine.players.add(bar)) {
     console.error(err)
     process.exit(1)
 }
-
-(async () => {
-    const err = await engine.start()
-    if (err) {
-        console.error(err)
-        process.exit(1)
-    }
-})()

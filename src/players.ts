@@ -1,28 +1,32 @@
 import { Nullable } from "./utils/types"
 import { ErrorMaxPlayer } from "./error"
-import TBSEngineEventEmitter, { TBSEngineEvent, TBSEngineEventData } from "./eventEmitter"
+import TBSEventEmitter, { TBSEvent, TBSEventData } from "./eventEmitter"
 import Player, { PlayerSnapshot } from "./player"
 
-type OnAddCb = (data: TBSEngineEventData) => void
+type OnAddCb = (data: TBSEventData) => void
+type OnReadyCb = () => void
 
 interface PlayersOptions {
     amount: number
     onAdd: OnAddCb
+    onReady: OnReadyCb
 }
 
-export default class Players extends TBSEngineEventEmitter {
+export default class Players extends TBSEventEmitter {
     private readonly _amount: number
     private readonly _list: Player[] = []
     constructor(opts: PlayersOptions) {
         super()
         this._amount = opts.amount
-        this.on(TBSEngineEvent.AddPlayer, opts.onAdd)
+        this.on(TBSEvent.AddPlayer, opts.onAdd)
+        this.on(TBSEvent.Ready, opts.onReady)
     }
 
     public add(player: Player): Nullable<ErrorMaxPlayer> {
         if (this._list.length < this._amount) {
             this._list.push(player)
-            this.structuredEmit(TBSEngineEvent.AddPlayer, { payload: { player } })
+            this.structuredEmit(TBSEvent.AddPlayer, { payload: { player } })
+            if (this.ready) this.structuredEmit(TBSEvent.Ready)
             return null
         }
         return new ErrorMaxPlayer(player, this._amount)

@@ -1,11 +1,11 @@
-import { TBSEngineEvent } from "./eventEmitter"
+import { TBSEvent } from "./eventEmitter"
 import Player from "./player"
 
 export default class ErrorTBSEngine extends Error {
     constructor(message: string) {
         super(`[tbs-engine] ${message}`)
-
-        // TODO Object.setPrototypeOf?
+        Object.setPrototypeOf(this, ErrorTBSEngine.prototype)
+        Error.captureStackTrace(this, this.constructor)
     }
 }
 
@@ -21,8 +21,8 @@ export class ErrorMaxPlayer extends ErrorTBSEngine {
     }
 }
 
-export class ErrorUnregisteredNewTurnCallback extends ErrorTBSEngine {
+export class ErrorUnregisteredTurnCallback extends ErrorTBSEngine {
     constructor() {
-        super(`Register at least one callback for the new turn event (TBSEngineEvent.NewTurn, ${TBSEngineEvent.NewTurn})`)
+        super(`Register at least one callback for the new turn event (TBSEngineEvent.Turn, ${TBSEvent.Turn})`)
     }
 }
