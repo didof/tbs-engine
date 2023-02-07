@@ -5,11 +5,11 @@ import { PlayerHuman } from "../src/player"
 import { sleep } from "../src/utils/promises"
 
 const engine = createTurnBasedStrategyEngine({
-    playersAmount: 2
+    playersAmount: 2,
+    maxTurns: Infinity
 })
 let err: Nullable<ErrorTurnBasedStrategyEngine>
 
-let i = 0
 engine
     .onAddPlayer((ctx) => {
         console.log("new player")
@@ -18,11 +18,9 @@ engine
         console.log("Starting...")
     })
     .onTurn(async ctx => {
-        await sleep()
         console.log("turn")
-        i++
-        if (i === 3) return false
-        return true
+        await sleep()
+        return ctx.turn.current < 3
     })
     .onEnd(() => {
         console.log("Exiting...")

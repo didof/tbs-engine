@@ -7,7 +7,7 @@ import { deepFreeze } from "./utils/immutable"
 type OnAddCb = (data: TBSEventData) => void
 type OnReadyCb = () => void
 
-interface PlayersOptions {
+type PlayersOptions = {
     amount: number
     onAdd: OnAddCb
     onReady: OnReadyCb
@@ -37,7 +37,7 @@ export default class Players extends TBSEventEmitter {
         return deepFreeze([...this._list.map((item, index) => item.snapshot(index))])
     }
 
-    get size(): [registered: number, total: number] {
+    get size(): [current: number, total: number] {
         return [this.list.length, this._amount]
     }
 
