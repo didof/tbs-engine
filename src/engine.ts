@@ -68,7 +68,7 @@ class TBSEngine {
         return this
     }
 
-    public onTurn(cb: TBSEEventCallback<true | void>): this {
+    public onTurn(cb: TBSEEventCallback<boolean | void>): this {
         const event = TBSEvent.Turn
         const cbs = this._ecbMap.get(event) || []
         this._ecbMap.set(event, [...cbs, cb])
