@@ -12,7 +12,7 @@
     "node": "./dist/index.cjs"
   },
   "scripts": {
-    "dev": "ts-node src/index.ts",
+    "dev": "ts-node examples/simple.ts",
     "build": "tsup src/index.ts",
     "start": "npm run build -- --watch",
     "lint": "tsc",
