@@ -10,7 +10,6 @@ const engine = createTurnBasedStrategyEngine({
 let err: Nullable<ErrorTurnBasedStrategyEngine>
 
 let i = 0
-
 engine
     .onAddPlayer((ctx) => {
         console.log("new player")
@@ -31,19 +30,21 @@ engine
     .onReady(async () => {
         const err = await engine.start()
         if (err) {
-            console.error(err)
-            process.exit(1)
+            exit(err)
         }
     })
 
 const foo = new PlayerHuman("foo")
 if (err = engine.players.add(foo)) {
-    console.error(err)
-    process.exit(1)
+    exit(err)
 }
 
 const bar = new PlayerHuman("bar")
 if (err = engine.players.add(bar)) {
+    exit(err)
+}
+
+function exit(err: Error) {
     console.error(err)
     process.exit(1)
 }
