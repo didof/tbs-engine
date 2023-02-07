@@ -31,6 +31,23 @@ describe("players", () => {
     })
 })
 
+describe("turns", () => {
+    test.concurrent("end the game if no more turns", async () => {
+        const engine = createTurnBasedStrategyEngine({
+            playersAmount: 1,
+            maxTurns: 3
+        })
+        engine.players.add(new PlayerHuman("foo"))
+        let onTurnCalled = 0
+        let endTurn: number = -1
+        engine.onTurn(_ => { onTurnCalled++ })
+        engine.onEnd(ctx => { endTurn = ctx.turn.current })
+        await engine.start()
+
+        expect(endTurn).toBe(onTurnCalled)
+    })
+})
+
 describe("start", () => {
     test.concurrent("return error if start is called before all the players have been registered", async () => {
         const engine = createTurnBasedStrategyEngine({

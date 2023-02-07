@@ -46,10 +46,10 @@ class TBSEngine {
         let run = true
         while (run) {
             for (const cb of cbs) {
+                this.turns.increment()
                 const ctx = this.createContext()
                 const res = await cb(ctx)
-                this.turns.increment()
-                if (res === true) {
+                if (res === true || this.turns.done) {
                     run = false
                     break
                 }

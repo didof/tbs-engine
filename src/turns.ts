@@ -6,7 +6,7 @@ type TurnsOptions = {
 
 export default class Turns extends TBSEngineEventEmitter {
     private _amount: number
-    private _current: number = 1
+    private _current: number = 0
     constructor(opts: TurnsOptions) {
         super()
         this._amount = opts.amount
