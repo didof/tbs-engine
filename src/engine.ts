@@ -1,11 +1,11 @@
-import { Nullable } from "./utils/types"
+import { Immutable, Nullable } from "./utils/types"
 import ErrorTBSEngine, * as errors from "./error"
 import { TBSEvent } from "./eventEmitter"
 import { PlayerSnapshot } from "./player"
 import Players from "./players"
+import { deepFreeze } from "./utils/immutable"
 
-// TODO transform to Immutable
-type TBSEContext = Readonly<{
+type TBSEContext = Immutable<{
     players: readonly PlayerSnapshot[]
 }>
 
@@ -14,7 +14,6 @@ type TBSEEventCallback<T = unknown> = (ctx: TBSEContext) => T | Promise<T>
 class TBSEngine {
     public players: Players
 
-    // TODO Based on the EventType, expect different return
     private _ecbMap: Map<TBSEvent, TBSEEventCallback[]> = new Map()
 
     constructor(playersAmount: number) {
@@ -89,9 +88,9 @@ class TBSEngine {
     }
 
     private createContext(): TBSEContext {
-        return {
+        return deepFreeze({
             players: this.players.list
-        }
+        })
     }
 
     private async safeRunCallback(event: TBSEvent): Promise<boolean> {

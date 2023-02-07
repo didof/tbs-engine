@@ -2,6 +2,7 @@ import { Nullable } from "./utils/types"
 import { ErrorMaxPlayer } from "./error"
 import TBSEventEmitter, { TBSEvent, TBSEventData } from "./eventEmitter"
 import Player, { PlayerSnapshot } from "./player"
+import { deepFreeze } from "./utils/immutable"
 
 type OnAddCb = (data: TBSEventData) => void
 type OnReadyCb = () => void
@@ -33,8 +34,7 @@ export default class Players extends TBSEventEmitter {
     }
 
     get list(): readonly PlayerSnapshot[] {
-        // TODO deep
-        return [...this._list.map((item, index) => item.snapshot(index))]
+        return deepFreeze([...this._list.map((item, index) => item.snapshot(index))])
     }
 
     get size(): [registered: number, total: number] {
