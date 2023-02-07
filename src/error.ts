@@ -4,7 +4,6 @@ import Player from "./player"
 export default class ErrorTBSEngine extends Error {
     constructor(message: string) {
         super(`[tbs-engine] ${message}`)
-        Object.setPrototypeOf(this, ErrorTBSEngine.prototype)
         Error.captureStackTrace(this, this.constructor)
     }
 }

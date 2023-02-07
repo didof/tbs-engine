@@ -10,12 +10,10 @@ describe("players", () => {
         })
         let err: Nullable<ErrorTurnBasedStrategyEngine>
 
-        const foo = new PlayerHuman("foo")
-        err = engine.players.add(foo)
+        err = engine.players.add(new PlayerHuman("foo"))
         expect(err).toBeNull()
 
-        const bar = new PlayerHuman("bar")
-        err = engine.players.add(bar)
+        err = engine.players.add(new PlayerHuman("bar"))
         expect(err).toBeInstanceOf(ErrorMaxPlayer)
     })
 
@@ -24,26 +22,77 @@ describe("players", () => {
             playersAmount: 3
         })
 
-        const foo = new PlayerHuman("foo")
-        const bar = new PlayerHuman("bar")
-        engine.players.add(foo)
-        engine.players.add(bar)
+        engine.players.add(new PlayerHuman("foo"))
+        engine.players.add(new PlayerHuman("bar"))
 
         expect(engine.players.size).toEqual([2, 3])
     })
+})
 
-    test.concurrent("return error if start is called before all the players have been registered", () => {
+describe("start", () => {
+    test.concurrent("return error if start is called before all the players have been registered", async () => {
         const engine = createTurnBasedStrategyEngine({
             playersAmount: 3
         })
         let err: Nullable<ErrorTurnBasedStrategyEngine>
 
-        const foo = new PlayerHuman("foo")
-        const bar = new PlayerHuman("bar")
-        engine.players.add(foo)
-        engine.players.add(bar)
+        engine.players.add(new PlayerHuman("foo"))
+        engine.players.add(new PlayerHuman("bar"))
 
-        err = engine.start()
+        err = await engine.start()
         expect(err).toBeInstanceOf(ErrorInsufficientPlayers)
+    })
+})
+
+describe("hooks", () => {
+    test.concurrent("onAddPlayer", () => {
+        const engine = createTurnBasedStrategyEngine({
+            playersAmount: 1
+        })
+        let called = false
+        engine.onAddPlayer(() => { called = true })
+
+        engine.players.add(new PlayerHuman("foo"))
+
+        expect(called).toBeTruthy()
+    })
+
+    test.concurrent("onReady", async () => {
+        const engine = createTurnBasedStrategyEngine({
+            playersAmount: 1
+        })
+        let called = false
+        engine.onReady(() => { called = true })
+
+        engine.players.add(new PlayerHuman("foo"))
+
+        expect(called).toBeTruthy()
+    })
+
+    test.concurrent("onStart", async () => {
+        const engine = createTurnBasedStrategyEngine({
+            playersAmount: 1
+        })
+        let called = false
+        engine.onStart(() => { called = true })
+
+        engine.players.add(new PlayerHuman("foo"))
+        await engine.start()
+
+        expect(called).toBeTruthy()
+    })
+
+    test.concurrent("onEnd", async () => {
+        const engine = createTurnBasedStrategyEngine({
+            playersAmount: 1
+        })
+        let called = false
+        engine.onEnd(() => { called = true })
+        engine.onTurn(() => false)
+
+        engine.players.add(new PlayerHuman("foo"))
+        await engine.start()
+
+        expect(called).toBeTruthy()
     })
 })
