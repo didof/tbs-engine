@@ -1,4 +1,4 @@
-import { TBSEvent } from "./eventEmitter"
+import { Event } from "./eventEmitter"
 import Player from "./player"
 
 export default class ErrorTBSEngine extends Error {
@@ -22,6 +22,6 @@ export class ErrorMaxPlayer extends ErrorTBSEngine {
 
 export class ErrorUnregisteredTurnCallback extends ErrorTBSEngine {
     constructor() {
-        super(`Register at least one callback for the new turn event (TBSEngineEvent.Turn, ${TBSEvent.Turn})`)
+        super(`Register at least one callback for the new turn event (TBSEngineEvent.Turn, ${Event.Turn})`)
     }
 }

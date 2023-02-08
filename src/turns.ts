@@ -1,5 +1,3 @@
-import Players from "./players"
-
 type TurnsOptions = {
     amount: number
 }

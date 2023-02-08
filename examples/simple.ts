@@ -12,7 +12,7 @@ let err: Nullable<ErrorTurnBasedStrategyEngine>
 
 engine
     .onAddPlayer((ctx) => {
-        console.log(`new player: ${ctx.activePlayer!.name}.`)
+        console.log(`new player: ${ctx.players.length}.`)
     })
     .onStart((ctx) => {
         console.log(`start: ${ctx.players.map(p => p.name).join(", ")}.`)

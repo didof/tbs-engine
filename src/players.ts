@@ -1,10 +1,10 @@
 import { Nullable } from "./utils/types"
 import { ErrorMaxPlayer } from "./error"
-import TBSEventEmitter, { TBSEvent, TBSEventData } from "./eventEmitter"
+import EventEmitter, { Event, EventData } from "./eventEmitter"
 import Player, { PlayerSnapshot } from "./player"
 import { deepFreeze } from "./utils/immutable"
 
-type OnAddCb = (data: TBSEventData) => void
+type OnAddCb = (data: EventData<{ player: Player }>) => void
 type OnReadyCb = () => void
 
 type PlayersOptions = {
@@ -13,21 +13,21 @@ type PlayersOptions = {
     onReady: OnReadyCb
 }
 
-export default class Players extends TBSEventEmitter {
+export default class Players extends EventEmitter {
     private readonly _amount: number
     private readonly _list: Player[] = []
     constructor(opts: PlayersOptions) {
         super()
         this._amount = opts.amount
-        this.on(TBSEvent.AddPlayer, opts.onAdd)
-        this.on(TBSEvent.Ready, opts.onReady)
+        this.on(Event.AddPlayer, opts.onAdd)
+        this.on(Event.Ready, opts.onReady)
     }
 
     public add(player: Player): Nullable<ErrorMaxPlayer> {
         if (this._list.length < this._amount) {
             this._list.push(player)
-            this.structuredEmit(TBSEvent.AddPlayer, { payload: { player } })
-            if (this.ready) this.structuredEmit(TBSEvent.Ready)
+            this.structuredEmit<{ player: Player }>(Event.AddPlayer, { payload: { player } })
+            if (this.ready) this.structuredEmit(Event.Ready)
             return null
         }
         return new ErrorMaxPlayer(player, this._amount)

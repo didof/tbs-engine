@@ -1,6 +1,7 @@
 import EventEmitter from "events"
+import { Nullable } from "./utils/types"
 
-export enum TBSEvent {
+export enum Event {
     AddPlayer = "add-player",
     Turn = "new-turn",
     Ready = "ready",
@@ -8,13 +9,13 @@ export enum TBSEvent {
     End = "end"
 }
 
-export interface TBSEventData {
-    payload: Record<string, any>
-    meta?: Record<string, any>
+export interface EventData<P extends object, M extends Nullable<object> = null> {
+    payload: P
+    meta?: M
 }
 
 export default class TBSEngineEventEmitter extends EventEmitter {
-    public structuredEmit(event: TBSEvent, data?: TBSEventData): boolean {
+    public structuredEmit<P extends object, M extends Nullable<object> = null>(event: Event, data?: EventData<P, M>): boolean {
         return this.emit(event, data)
     }
 }
