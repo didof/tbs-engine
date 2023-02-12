@@ -4,10 +4,12 @@ import { server } from "../utils/axios"
 import { SerializedGame } from "../../server/src/model/Game"
 import router from "../router"
 import { Nullable } from "../utils/types"
+import { useRoute } from "vue-router"
 
 export enum Store {
     AvailableRooms = "available-rooms",
-    Client = "client"
+    Client = "client",
+    Game = "game"
 }
 
 type StateAvailableRooms = {
@@ -28,7 +30,7 @@ export const useAvailableRoomsStore = defineStore(Store.AvailableRooms, {
                 throw err
             }
 
-            this.list.push(...res.data.games)
+            this.list = [...res.data.games]
 
         },
         async create(username: string, gamename: string) {
@@ -109,6 +111,31 @@ export const useClient = defineStore(Store.Client, {
             this.hasToken = false
 
             router.replace("/")
+        }
+    }
+})
+
+type StateGame = {
+    value: Nullable<SerializedGame>
+}
+
+export const useGame = defineStore(Store.Game, {
+    state: (): StateGame => ({ value: null }),
+
+    getters: {
+        hasGame(): boolean {
+            return Boolean(this.value)
+        }
+    },
+
+    actions: {
+        async assert(id: string): Promise<void> {
+            const [err, res] = await to(server.getGame(id))
+            if (err) {
+                throw err
+            }
+
+            this.value = res.data.game
         }
     }
 })

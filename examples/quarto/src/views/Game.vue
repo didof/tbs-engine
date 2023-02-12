@@ -1,11 +1,26 @@
 <script setup lang="ts">
-import { useRoute } from "vue-router";
+import { useGame } from "../store";
 
-const route = useRoute();
+const game = useGame()!;
 </script>
 
 <template>
-  <h1>Game {{ route.params.id }}</h1>
+  <div>
+    <h1>Game {{ game.value!.id }}</h1>
+
+    <p>
+      Participants: {{ game!.value!.participants.current.length }} /
+      {{ game!.value!.participants.total }}
+    </p>
+
+    <ul>
+      <li v-for="participant of game!.value!.participants.current">
+        {{ participant.name }}
+      </li>
+    </ul>
+
+    <button v-if="true">Start</button>
+  </div>
 </template>
 
 <style scoped></style>
